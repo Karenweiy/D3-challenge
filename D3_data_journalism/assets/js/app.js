@@ -32,6 +32,7 @@ var chartGroup = svg.append("g")
 
 d3.csv("assets/data/data.csv", function(error, Data) {
   if (error) throw error;
+  console.log(Data)
 
   // Step 4: Parse the data
   // Format the data and convert to numerical
@@ -47,7 +48,7 @@ Data.forEach(function(record) {
 
 // //Step 4: Create Scaling functions & axis functions for Healthcare vs. Poverty
   var xScale = d3.scaleLinear()
-    .domain(d3.extent(Data, d => d.poverty))
+    .domain([d3.min(Data,d => d.poverty)-1,d3.max(Data, d => d.poverty)])
     .range([0, width]);
 
   var yScale = d3.scaleLinear()
@@ -76,22 +77,24 @@ Data.forEach(function(record) {
     .attr("cy", d => yScale(d.healthcare))
     .attr("r", "15")
     .attr("fill", "skyblue")
-    .attr("opacity", ".5");
+    .attr("opacity", ".5")
+    .attr("data-state", d=>d.abbr);
 
 // //Step 6: Insert Abbr. to circles
-    circlesGroup.append("text")
-     .attr("dy", "1.3em")
+    var textGroup = chartGroup.selectAll(".state")
+      .data(Data)
+      .enter()
+      .append("text")
+     .html(d=> d.abbr)
+     .attr("x", d => xScale(d.poverty))
+     .attr("y", d => yScale(d.healthcare))
      .style("text-anchor", "middle")
-     .data(function(d){
-      return d.abbr;
-     })
-     .enter()
-     .attr("font-size",10)
-     .attr("font-family",  "Gill Sans", "Gill Sans MT")
-     .attr("fill", "white");
+     .style("font-size","10px")
+     .style("font-family",  "Gill Sans", "Gill Sans MT")
+     .style("fill", "black");
 
  // Create axes labels
-    chartGroup.append("text")
+    var lacksHC = chartGroup.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 0 - margin.left)
       .attr("x", 0 - (height / 2))
@@ -99,7 +102,7 @@ Data.forEach(function(record) {
       .attr("class", "axisText")
       .text("Lacks Healthcare (%)");
 
-    chartGroup.append("text")
+    var inPoverty = chartGroup.append("text")
       .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
       .attr("class", "axisText")
       .text("In poverty (%)");
